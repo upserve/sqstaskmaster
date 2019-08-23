@@ -1,8 +1,14 @@
 language: python
 python:
-  - "3.7"
-# command to install dependencies
+- '3.7'
 install:
-  - pip install -e .[dev]
-# command to run tests
+- pip install -e .[dev]
 script: python -m unittest -v; flake8 .
+deploy:
+  provider: pypi
+  skip_existing: true
+  user: __token__
+  password:
+    secure: a4E7iK0BEVlnSXDsHtyOm/h4POqlIKfxdFR3o12QctSVhLW6bqNZ2i+CpfbLKNaZQ+VWVt9zDisZUdl4tYJPHJe7WA/gMjqeu0L5vY5T2S91BQlVoFtL3UzLb5rrK6TLE0mrQrS8U/3S8GrOJZ0rIKgmr13L0I0eusJNwQ9ejlZKfSSMrFU3JdR5oB1bktRAkntrze0BOcXlEX7tP0mG5oSEPohHoXbFFyvsJaZztBqRIuptdP4p60v7H9DHNBUJRmOZLQeBHY/1G0aQcn1Nvc3NCUGmbHB/SJJqEHSLsj+ljDHNBY8MvnMN9tWZq9Eh+O7OqhrleGSa9zvygyVULgISj2eCdHjunI7TU6IhE4UXCPRt2uLAX7MBJab8CD1Q3l5Fxku+ANiSIyl2+r57fH1xLpvZds5YdjbBO7Wwksbi9aPCusAhwYzFykUjkYpJkrlUql9Z8o5Kd1ryRDTyrnR1umJndla/Ag7v/OTSp4cBYUPb7Nwvl4YBMJzwXn8OCrGy097sh0XVIg3V7TLEsG/U/81D1iyFx8e+H6qUkc2gHiiBa06jBE+XMbWqpLnWnKcq/bwz6Yg6nxAomOay0SV2SNty2k4jPmLFvqdx99hidkDFMIezFfMBMtoTqX3XDvSycI/Mq+dhWhFNwbAaHcwL+DNYaW1rA450NoNrTrQ=
+  on:
+    branch: master
