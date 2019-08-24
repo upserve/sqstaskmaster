@@ -20,6 +20,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=["boto3", "botocore"],
-    extras_require={"dev": ["callee", "flake8", "black"]},
+    extras_require={"dev": ["callee", "flake8", "black", "cython"]},
     python_requires="~=3.7",
 )

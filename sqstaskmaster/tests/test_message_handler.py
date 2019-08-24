@@ -3,12 +3,14 @@ import time
 import unittest
 import builtins
 import subprocess
-from abc import ABC
+import pyximport
 
+from abc import ABC
 from unittest.mock import patch, Mock, DEFAULT
 from botocore.exceptions import ClientError
-
 from sqstaskmaster.message_handler import MessageHandler
+
+pyximport.install(language_level=3)
 
 
 class TestHandler(MessageHandler, ABC):
@@ -34,6 +36,13 @@ class TestSleepHandler(TestHandler):
 class TestProcessHandler(TestHandler):
     def run(self):
         subprocess.call("while true; do true; done", shell=True)
+
+
+class TestCBuysHandler(TestHandler):
+    def run(self):
+        from sqstaskmaster.tests import cbusy
+
+        cbusy.busy()
 
 
 @patch.multiple(MessageHandler, __abstractmethods__=set(), notify=DEFAULT)
@@ -309,3 +318,11 @@ class TestMessageHandler(unittest.TestCase):
 
     def test_sleep_timeout(self, **kwargs):
         self.helper(TestSleepHandler)
+
+    def test_cbusy_timeout(self, **kwargs):
+        """
+        This test takes 2 seconds instead of 1. It passes because the handler is called when the c busy loop exits,
+        but the tight loop in c is not interrupted at 1 second
+        :param kwargs: not used
+        """
+        self.helper(TestCBuysHandler)

@@ -31,6 +31,7 @@ Upserve developed this library for use with long running data science tools like
 `OrTools <https://github.com/google/or-tools>`_.
 While python `singal <https://docs.python.org/3/library/signal.html#execution-of-python-signal-handlers>`_
 will attempt to interrupt the process, you should verify the desired behavior.
+This behavior is documented in TestMessageHandler.test_cbusy_timeout.
 
 
 Other choices:
