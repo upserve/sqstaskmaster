@@ -11,7 +11,7 @@ from botocore.exceptions import ClientError
 from sqstaskmaster.message_handler import MessageHandler
 
 pyximport.install(language_level=3)
-from sqstaskmaster.tests import cbusy
+from sqstaskmaster.tests import cbusy  # noqa: ignore=E402
 
 
 class TestHandler(MessageHandler, ABC):
