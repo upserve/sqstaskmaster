@@ -11,6 +11,7 @@ from botocore.exceptions import ClientError
 from sqstaskmaster.message_handler import MessageHandler
 
 pyximport.install(language_level=3)
+from sqstaskmaster.tests import cbusy
 
 
 class TestHandler(MessageHandler, ABC):
@@ -40,8 +41,6 @@ class TestProcessHandler(TestHandler):
 
 class TestCBuysHandler(TestHandler):
     def run(self):
-        from sqstaskmaster.tests import cbusy
-
         cbusy.busy()
 
 
