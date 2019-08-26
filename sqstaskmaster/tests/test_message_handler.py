@@ -2,11 +2,46 @@ import signal
 import time
 import unittest
 import builtins
+import subprocess
+import pyximport
 
+from abc import ABC
 from unittest.mock import patch, Mock, DEFAULT
 from botocore.exceptions import ClientError
-
 from sqstaskmaster.message_handler import MessageHandler
+
+pyximport.install(language_level=3)
+from sqstaskmaster.tests import cbusy  # noqa: ignore=E402
+
+
+class TestHandler(MessageHandler, ABC):
+    def notify(self, exception, context=None):
+        pass
+
+    def running(self):
+        return True
+
+
+class TestBusyHandler(TestHandler):
+    def run(self):
+        while True:
+            pass
+
+
+class TestSleepHandler(TestHandler):
+    def run(self):
+        while True:
+            time.sleep(30)
+
+
+class TestProcessHandler(TestHandler):
+    def run(self):
+        subprocess.call("while true; do true; done", shell=True)
+
+
+class TestCBuysHandler(TestHandler):
+    def run(self):
+        cbusy.busy()
 
 
 @patch.multiple(MessageHandler, __abstractmethods__=set(), notify=DEFAULT)
@@ -241,6 +276,7 @@ class TestMessageHandler(unittest.TestCase):
         mock_message = Mock()
         mock_message.attributes.keys.return_value = []
         error = TimeoutError("foobar")
+
         with patch.object(builtins, "TimeoutError", return_value=error) as mock_timeout:
             with MessageHandler(
                 mock_message, sqs_timeout=3, alarm_timeout=1, hard_timeout=1
@@ -262,3 +298,30 @@ class TestMessageHandler(unittest.TestCase):
         notify.assert_called_once_with(
             error, context={"body": mock_message.body, **mock_message.attributes}
         )
+
+    def helper(self, clazz):
+        mock_message = Mock()
+        mock_message.attributes.keys.return_value = []
+
+        with clazz(
+            mock_message, sqs_timeout=3, alarm_timeout=1, hard_timeout=1
+        ) as instance:
+            with self.assertRaises(TimeoutError):
+                instance.run()
+
+    def test_busy_loop_timeout(self, **kwargs):
+        self.helper(TestBusyHandler)
+
+    def test_external_process_timeout(self, **kwargs):
+        self.helper(TestProcessHandler)
+
+    def test_sleep_timeout(self, **kwargs):
+        self.helper(TestSleepHandler)
+
+    def test_cbusy_timeout(self, **kwargs):
+        """
+        This test takes 2 seconds instead of 1. It passes because the handler is called when the c busy loop exits,
+        but the tight loop in c is not interrupted at 1 second
+        :param kwargs: not used
+        """
+        self.helper(TestCBuysHandler)

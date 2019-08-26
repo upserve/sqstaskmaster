@@ -129,7 +129,7 @@ class MessageHandler(ABC):
     def running(self):
         """
         Detect whether the handler process is stuck
-        :return: True if the process is handler is still executing. False if the handler process is stopped or stuck
+        :return: True if the process handler is still executing. False if the handler process is stopped or stuck
         """
         pass
 
