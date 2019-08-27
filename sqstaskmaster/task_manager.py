@@ -6,7 +6,6 @@ from json import JSONDecodeError
 
 
 class TaskManager:
-    STAGING_URL = "https://sqs.us-east-1.amazonaws.com/644891637164/StagingWorkforceOptimizerBatchJobQueue"
 
     def __init__(self, sqs_url, notify=None):
         self.sqs = boto3.resource("sqs")

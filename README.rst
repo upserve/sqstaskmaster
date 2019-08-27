@@ -27,11 +27,11 @@ Retries and failures are handled using SQS infrastructure.
 It is designed to work with standard SQS queues which guarantee at least once delivery.
 
 Upserve developed this library for use with long running data science tools like
-`XgBoost <https://github.com/dmlc/xgboost/tree/master/python-package>`_ and
+`xgBoost <https://github.com/dmlc/xgboost/tree/master/python-package>`_ and
 `OrTools <https://github.com/google/or-tools>`_.
-While python `singal <https://docs.python.org/3/library/signal.html#execution-of-python-signal-handlers>`_
+While python `signal <https://docs.python.org/3/library/signal.html#execution-of-python-signal-handlers>`_
 will attempt to interrupt the process, you should verify the desired behavior.
-This behavior is documented in TestMessageHandler.test_cbusy_timeout.
+This behavior and shortcomings with c libraries is documented in TestMessageHandler.test_cbusy_timeout.
 
 
 Other choices:
@@ -54,7 +54,7 @@ Usage
 Publish Tasks
 ::
 
-  foo
+  TODO
 
 
 Consume Tasks
