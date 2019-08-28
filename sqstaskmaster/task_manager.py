@@ -4,9 +4,10 @@ import json
 import boto3
 from json import JSONDecodeError
 
+logger = logging.getLogger("__name__")
+
 
 class TaskManager:
-
     def __init__(self, sqs_url, notify=None):
         self.sqs = boto3.resource("sqs")
         self.url = sqs_url
