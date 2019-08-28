@@ -23,10 +23,33 @@ class TestBatchJobResourceMonitorTask(unittest.TestCase):
         self.assertEqual(provisioner.sqs, boto3.resource.return_value)
         self.assertEqual(provisioner.ecs, boto3.client.return_value)
 
-        with self.assertRaisesRegex(
-            AssertionError, "rules must specify the queue_name"
-        ):
+        with self.assertRaisesRegex(TypeError, "Rules must be iterable: 55"):
+            queue_scale.Provisioner(55)
+
+        with self.assertRaisesRegex(TypeError, "Each rule must be a dictionary: foo"):
+            queue_scale.Provisioner(["foo"])
+
+        with self.assertRaisesRegex(KeyError, "Rules must specify the queue_name"):
             queue_scale.Provisioner([{}])
+
+        with self.assertRaisesRegex(KeyError, "Rules must specify the service_name"):
+            queue_scale.Provisioner([{"queue_name": "queue2"}])
+
+        with self.assertRaisesRegex(KeyError, "Rules must specify the cluster_name"):
+            queue_scale.Provisioner(
+                [{"queue_name": "queue2", "service_name": "service1"}]
+            )
+
+        with self.assertRaisesRegex(KeyError, "Rules must specify the active_size"):
+            queue_scale.Provisioner(
+                [
+                    {
+                        "queue_name": "queue2",
+                        "service_name": "service1",
+                        "cluster_name": "cluster3",
+                    }
+                ]
+            )
 
     def test_run_with_messages(self, boto3):
         provisioner = queue_scale.Provisioner([self.RULE])

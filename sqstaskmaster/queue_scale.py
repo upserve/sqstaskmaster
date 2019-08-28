@@ -45,20 +45,23 @@ class Provisioner:
     def __init__(self, rules, notify=None):
         self._rules = rules
 
+        if not hasattr(rules, "__iter__"):
+            raise TypeError("Rules must be iterable: {}".format(rules))
         for rule in rules:
-            assert isinstance(rule, dict), "rules must be a dictionary"
-            assert self.QUEUE_NAME in rule, "rules must specify the {}".format(
-                self.QUEUE_NAME
-            )
-            assert self.SERVICE_NAME in rule, "rules must specify the {}".format(
-                self.SERVICE_NAME
-            )
-            assert self.CLUSTER_NAME in rule, "rules must specify the {}".format(
-                self.CLUSTER_NAME
-            )
-            assert self.ACTIVE_SIZE in rule, "rules must specify the {}".format(
-                self.ACTIVE_SIZE
-            )
+            if not isinstance(rule, dict):
+                raise TypeError("Each rule must be a dictionary: {}".format(rule))
+
+            if self.QUEUE_NAME not in rule:
+                raise KeyError("Rules must specify the {}".format(self.QUEUE_NAME))
+
+            if self.SERVICE_NAME not in rule:
+                raise KeyError("Rules must specify the {}".format(self.SERVICE_NAME))
+
+            if self.CLUSTER_NAME not in rule:
+                raise KeyError("Rules must specify the {}".format(self.CLUSTER_NAME))
+
+            if self.ACTIVE_SIZE not in rule:
+                raise KeyError("Rules must specify the {}".format(self.ACTIVE_SIZE))
 
         self._notify = notify
 
