@@ -109,8 +109,7 @@ class TestMessageHandler(unittest.TestCase):
         mock_signal.assert_called_once_with(signal.SIGALRM, instance._handle_alarm)
 
     @patch("signal.alarm")
-    @patch("logging.exception")
-    def test___exit__no_error(self, mock_log_exception, mock_alarm, **kwargs):
+    def test___exit__no_error(self, mock_alarm, **kwargs):
         mock_message = Mock()
         instance = MessageHandler(
             mock_message, sqs_timeout=13, alarm_timeout=11, hard_timeout=17
