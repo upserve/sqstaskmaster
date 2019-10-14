@@ -64,11 +64,11 @@ class MessageHandler(ABC):
         return time.time() - self._start_time
 
     def _handle_alarm(self, signum, frame):
-        logging.info("Handling %s for %s in frame %s", signum, self, frame)
+        logger.info("Handling %s for %s in frame %s", signum, self, frame)
         if self._run_time() > self.hard_timeout:
             raise TimeoutError("Hit Hard Timeout for message handler")
         elif self.running():
-            logging.info("Adjusting sqs timeout")
+            logger.info("Adjusting sqs timeout")
             try:
                 self._extend_timeout(self.sqs_timeout)
                 signal.alarm(self.alarm_timeout)
@@ -77,7 +77,7 @@ class MessageHandler(ABC):
                 self.notify(
                     ce, context={"body": self._message.body, **self._message.attributes}
                 )
-                logging.exception("Failed to extend timeout for %s", self)
+                logger.exception("Failed to extend timeout for %s", self)
         else:
             raise RuntimeError("Handler is stuck on %s", self)
 
@@ -93,7 +93,7 @@ class MessageHandler(ABC):
                 self.notify(
                     ce, context={"body": self._message.body, **self._message.attributes}
                 )
-                logging.exception("failed to delete message %s", self._message)
+                logger.exception("failed to delete message %s", self._message)
 
         else:
             # Should the message visibility time be set to 0 here?
@@ -101,7 +101,7 @@ class MessageHandler(ABC):
                 exc_val,
                 context={"body": self._message.body, **self._message.attributes},
             )
-            logging.exception("Failed for message %s", self._message)
+            logger.exception("Failed for message %s", self._message)
 
         # catch only Exception not BaseException
         # https://docs.python.org/3/library/exceptions.html#exception-hierarchy

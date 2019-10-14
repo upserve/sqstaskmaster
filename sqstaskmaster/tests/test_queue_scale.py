@@ -85,7 +85,7 @@ class TestBatchJobResourceMonitorTask(unittest.TestCase):
             desiredCount=0,
         )
 
-    @patch("logging.exception")
+    @patch("sqstaskmaster.queue_scale.logger")
     def test_run_with_client_error(self, log, boto3):
         notify = Mock()
         ce = ClientError({}, "operation")
@@ -93,5 +93,7 @@ class TestBatchJobResourceMonitorTask(unittest.TestCase):
         boto3.resource.return_value.Queue.side_effect = Mock(side_effect=ce)
         provisioner.run()
 
-        log.assert_called_once_with("Failed to update resources for rule %s", self.RULE)
+        log.exception.assert_called_once_with(
+            "Failed to update resources for rule %s", self.RULE
+        )
         notify.assert_called_once_with(ce, context=self.RULE)

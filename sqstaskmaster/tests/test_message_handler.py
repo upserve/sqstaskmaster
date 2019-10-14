@@ -109,8 +109,7 @@ class TestMessageHandler(unittest.TestCase):
         mock_signal.assert_called_once_with(signal.SIGALRM, instance._handle_alarm)
 
     @patch("signal.alarm")
-    @patch("logging.exception")
-    def test___exit__no_error(self, mock_log_exception, mock_alarm, **kwargs):
+    def test___exit__no_error(self, mock_alarm, **kwargs):
         mock_message = Mock()
         instance = MessageHandler(
             mock_message, sqs_timeout=13, alarm_timeout=11, hard_timeout=17
@@ -123,8 +122,8 @@ class TestMessageHandler(unittest.TestCase):
         mock_message.delete.assert_called_once_with()
 
     @patch("signal.alarm")
-    @patch("logging.exception")
-    def test___exit__delete_fails(self, mock_log_exception, mock_alarm, notify=None):
+    @patch("sqstaskmaster.message_handler.logger")
+    def test___exit__delete_fails(self, mock_logger, mock_alarm, notify=None):
         mock_message = Mock()
         instance = MessageHandler(
             mock_message, sqs_timeout=13, alarm_timeout=11, hard_timeout=17
@@ -137,7 +136,7 @@ class TestMessageHandler(unittest.TestCase):
             "should always return true", instance.__exit__(None, None, None)
         )
         mock_alarm.assert_called_once_with(0)
-        mock_log_exception.assert_called_once_with(
+        mock_logger.exception.assert_called_once_with(
             "failed to delete message %s", mock_message
         )
         notify.assert_called_once_with(
@@ -145,10 +144,8 @@ class TestMessageHandler(unittest.TestCase):
         )
 
     @patch("signal.alarm")
-    @patch("logging.exception")
-    def test___exit__exception_raised(
-        self, mock_log_exception, mock_alarm, notify=None
-    ):
+    @patch("sqstaskmaster.message_handler.logger")
+    def test___exit__exception_raised(self, mock_logger, mock_alarm, notify=None):
         mock_message = Mock()
         instance = MessageHandler(
             mock_message, sqs_timeout=13, alarm_timeout=11, hard_timeout=17
@@ -163,7 +160,7 @@ class TestMessageHandler(unittest.TestCase):
 
         mock_message.delete.assert_not_called()
         mock_alarm.assert_called_once_with(0)
-        mock_log_exception.assert_called_once_with(
+        mock_logger.exception.assert_called_once_with(
             "Failed for message %s", mock_message
         )
         notify.assert_called_once_with(
@@ -218,7 +215,7 @@ class TestMessageHandler(unittest.TestCase):
 
     @patch("signal.alarm")
     @patch("signal.signal")
-    @patch("logging.exception")
+    @patch("sqstaskmaster.message_handler.logger")
     def test_handler_failure_exception(
         self, mock_log, mock_signal, mock_alarm, notify=None
     ):
@@ -236,14 +233,16 @@ class TestMessageHandler(unittest.TestCase):
         mock_message.delete.assert_not_called()
         mock_alarm.assert_called_once_with(0)
 
-        mock_log.assert_called_once_with("Failed for message %s", mock_message)
+        mock_log.exception.assert_called_once_with(
+            "Failed for message %s", mock_message
+        )
         notify.assert_called_once_with(
             error, context={"body": mock_message.body, **mock_message.attributes}
         )
 
     @patch("signal.alarm")
     @patch("signal.signal")
-    @patch("logging.exception")
+    @patch("sqstaskmaster.message_handler.logger")
     def test_handler_fail_base_exception(
         self, mock_log, mock_signal, mock_alarm, notify=None
     ):
@@ -264,14 +263,16 @@ class TestMessageHandler(unittest.TestCase):
         mock_message.delete.assert_not_called()
         mock_alarm.assert_called_once_with(0)
 
-        mock_log.assert_called_once_with("Failed for message %s", mock_message)
+        mock_log.exception.assert_called_once_with(
+            "Failed for message %s", mock_message
+        )
         notify.assert_called_once_with(
             error, context={"body": mock_message.body, **mock_message.attributes}
         )
 
     @patch("signal.alarm")
     @patch("signal.signal")
-    @patch("logging.exception")
+    @patch("sqstaskmaster.message_handler.logger")
     def test_handler_timeout(self, mock_log, mock_signal, mock_alarm, notify=None):
         mock_message = Mock()
         mock_message.attributes.keys.return_value = []
@@ -294,7 +295,9 @@ class TestMessageHandler(unittest.TestCase):
         mock_message.delete.assert_not_called()
         mock_alarm.assert_called_once_with(0)
 
-        mock_log.assert_called_once_with("Failed for message %s", mock_message)
+        mock_log.exception.assert_called_once_with(
+            "Failed for message %s", mock_message
+        )
         notify.assert_called_once_with(
             error, context={"body": mock_message.body, **mock_message.attributes}
         )

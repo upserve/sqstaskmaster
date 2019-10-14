@@ -72,10 +72,10 @@ class Provisioner:
         """
         For each rule, check the queue depth and adjust the service count
         """
-        logging.info("Checking queue for work and scaling service resources")
+        logger.info("Checking queue for work and scaling service resources")
 
         for rule in self._rules:
-            logging.debug("running rule: %s", rule)
+            logger.debug("running rule: %s", rule)
             try:
                 queue_attributes = self.sqs.Queue(rule[self.QUEUE_NAME]).attributes
                 total_messages = sum(
@@ -91,7 +91,7 @@ class Provisioner:
                     desiredCount=rule[self.ACTIVE_SIZE] if total_messages > 0 else 0,
                 )
 
-                logging.info(
+                logger.info(
                     "Setting: %s %s to %s count",
                     rule[self.CLUSTER_NAME],
                     rule[self.SERVICE_NAME],
@@ -101,12 +101,12 @@ class Provisioner:
                 self.log_queue_depth(queue_attributes, rule)
 
             except ClientError as ce:
-                logging.exception("Failed to update resources for rule %s", rule)
+                logger.exception("Failed to update resources for rule %s", rule)
                 self.notify(ce, context=rule)
 
     def log_queue_depth(self, queue_attributes, rule):
         for name, attr in self.QUEUE_DEPTH_ATTRIBUTES.items():
-            logging.info(
+            logger.info(
                 "queue_health_monitor: name - %s; %s - %s",
                 name,
                 queue_attributes[attr],

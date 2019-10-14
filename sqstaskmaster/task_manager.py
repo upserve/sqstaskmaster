@@ -100,10 +100,10 @@ class TaskManager:
             )  # Do not handle exceptions - bomb out and restart the container process
 
             if not messages:
-                logging.info("Waiting for work from SQS!")
+                logger.info("Waiting for work from SQS!")
 
             for message in messages:  # Always length one but use a loop anyway
-                logging.debug(
+                logger.debug(
                     "received %s with body %s attrs %s",
                     message,
                     message.body,
@@ -114,14 +114,14 @@ class TaskManager:
                     yield content["task"], content["kwargs"], message
                 except JSONDecodeError as e:
                     self.notify(e, context={"body": message.body, **message.attributes})
-                    logging.exception(
+                    logger.exception(
                         "failed to decode message %s with %s",
                         message.body,
                         message.attributes,
                     )
                 except KeyError as e:
                     self.notify(e, context={"body": message.body, **message.attributes})
-                    logging.exception(
+                    logger.exception(
                         "failed to get required field %s from content %s with %s",
                         e,
                         message.body,
