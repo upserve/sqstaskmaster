@@ -61,7 +61,7 @@ class TestBatchJobQueue(unittest.TestCase):
             VisibilityTimeout=10,
         )
 
-    @patch("logging.exception")
+    @patch("sqstaskmaster.task_manager.logger")
     def test_task_generator_decode_error(self, mock_log, mock_resource):
         mock_notify = Mock()
         instance = TaskManager(self.SQS_URL, notify=mock_notify)
@@ -86,7 +86,7 @@ class TestBatchJobQueue(unittest.TestCase):
             InstanceOf(JSONDecodeError),
             context={"body": '{"task": "task_name", "kwargs": {"foo": "b'},
         )
-        mock_log.assert_called_once_with(
+        mock_log.exception.assert_called_once_with(
             "failed to decode message %s with %s",
             '{"task": "task_name", "kwargs": {"foo": "b',
             {},
@@ -99,7 +99,7 @@ class TestBatchJobQueue(unittest.TestCase):
             VisibilityTimeout=10,
         )
 
-    @patch("logging.exception")
+    @patch("sqstaskmaster.task_manager.logger")
     def test_task_generator_key_error(self, mock_log, mock_resource):
         mock_notify = Mock()
 
@@ -125,7 +125,7 @@ class TestBatchJobQueue(unittest.TestCase):
             InstanceOf(KeyError),
             context={"body": '{"wrong_key": "task_name", "kwargs": {"foo": "bar"}}'},
         )
-        mock_log.assert_called_once_with(
+        mock_log.exception.assert_called_once_with(
             "failed to get required field %s from content %s with %s",
             InstanceOf(KeyError),
             '{"wrong_key": "task_name", "kwargs": {"foo": "bar"}}',
