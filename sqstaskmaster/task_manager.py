@@ -4,7 +4,7 @@ import json
 import boto3
 from json import JSONDecodeError
 
-logger = logging.getLogger("__name__")
+logger = logging.getLogger(__name__)
 
 
 class TaskManager:

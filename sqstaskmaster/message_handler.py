@@ -5,7 +5,7 @@ import time
 from abc import ABC, abstractmethod
 from botocore.exceptions import ClientError
 
-logger = logging.getLogger("__name__")
+logger = logging.getLogger(__name__)
 
 
 class MessageHandler(ABC):
