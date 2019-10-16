@@ -58,7 +58,9 @@ class TestMessageHandler(unittest.TestCase):
         self.assertEqual(instance.alarm_timeout, 11)
         self.assertEqual(instance.hard_timeout, 17)
 
-        with self.assertRaisesRegex(ValueError, "is to long to reset the sqs timeout"):
+        with self.assertRaisesRegex(
+            ValueError, "Alarm timeout 12 is to long to reset the sqs timeout 13"
+        ):
             MessageHandler(
                 mock_message, sqs_timeout=13, alarm_timeout=12, hard_timeout=17
             )
