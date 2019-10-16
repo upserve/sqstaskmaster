@@ -47,9 +47,9 @@ class MessageHandler(ABC):
 
         if (alarm_timeout + 1) >= sqs_timeout:
             raise ValueError(
-                "Alarm timeout %d is to long to reset the sqs timeout %d",
-                alarm_timeout,
-                sqs_timeout,
+                "Alarm timeout {:d} is to long to reset the sqs timeout {:d}".format(
+                    alarm_timeout, sqs_timeout
+                )
             )
 
         self._start_time = time.time()
