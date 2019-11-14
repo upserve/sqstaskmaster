@@ -5,12 +5,33 @@ from json import JSONDecodeError
 from unittest.mock import patch, Mock
 from callee import InstanceOf
 
+from sqstaskmaster.local import LocalQueue
 from sqstaskmaster.task_manager import TaskManager
 
 
 @patch("boto3.resource")
 class TestBatchJobQueue(unittest.TestCase):
     SQS_URL = "https://sqs.us-east-1.amazonaws.com/{account_id}/queue_name"
+
+    def test___init__(self, mock_resource):
+        instance = TaskManager(self.SQS_URL)
+        self.assertEqual(instance.queue, mock_resource.return_value.Queue.return_value)
+        self.assertIsNone(instance.sender_name)
+        self.assertIsNone(instance._notify)
+        self.assertIs(instance.url, self.SQS_URL)
+
+        instance = TaskManager(
+            self.SQS_URL, queue_constructor=LocalQueue, sender_name="Foo", notify="bar"
+        )
+        self.assertIsInstance(instance.queue, LocalQueue)
+        self.assertEqual(instance.sender_name, "Foo")
+        self.assertEqual(instance._notify, "bar")
+        self.assertIs(instance.url, self.SQS_URL)
+
+        with self.assertRaisesRegex(
+            TypeError, "TaskManager invalid queue_constructor type"
+        ):
+            TaskManager(self.SQS_URL, queue_constructor=object)
 
     def test_attributes(self, mock_resource):
         instance = TaskManager(self.SQS_URL)
@@ -34,7 +55,7 @@ class TestBatchJobQueue(unittest.TestCase):
             MessageBody='{"task": "task_name", "kwargs": {"foo": "bar", "date": "2019-01-01"}}',
             MessageAttributes={
                 "service_name": {
-                    "StringValue": "WorkforceOptimizer",
+                    "StringValue": "Unknown sender to: https://sqs.us-east-1.amazonaws.com/{account_id}/queue_name",
                     "DataType": "String",
                 }
             },

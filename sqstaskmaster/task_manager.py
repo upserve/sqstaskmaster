@@ -3,15 +3,28 @@ import json
 
 import boto3
 from json import JSONDecodeError
+from sqstaskmaster import local
 
 logger = logging.getLogger(__name__)
 
 
 class TaskManager:
-    def __init__(self, sqs_url, notify=None):
-        self.sqs = boto3.resource("sqs")
+    def __init__(self, sqs_url, notify=None, queue_constructor=None, sender_name=None):
         self.url = sqs_url
-        self.queue = self.sqs.Queue(self.url)
+        self.sender_name = sender_name
+
+        if queue_constructor is None:
+            self.sqs = boto3.resource("sqs")
+            self.queue = self.sqs.Queue(sqs_url)
+        elif queue_constructor is local.LocalQueue:
+            self.queue = queue_constructor(sqs_url)
+            # TODO how to validate the boto3 SQS meta class or the Queue constructor?
+        else:
+            raise TypeError(
+                "TaskManager invalid queue_constructor type {}: Options are None for boto3 SQS Queue or "
+                "sqstaskmaster.local.LocalQueue".format(queue_constructor)
+            )
+
         self._notify = notify
 
     def attributes(self):
@@ -45,7 +58,7 @@ class TaskManager:
             MessageBody=body,
             MessageAttributes={
                 "service_name": {
-                    "StringValue": "WorkforceOptimizer",
+                    "StringValue": self.sender_name or "Unknown sender to: " + self.url,
                     "DataType": "String",
                 }
             },

@@ -163,7 +163,7 @@ class TestMessageHandler(unittest.TestCase):
         mock_message.delete.assert_not_called()
         mock_alarm.assert_called_once_with(0)
         mock_logger.exception.assert_called_once_with(
-            "Failed for message %s", mock_message
+            "Failed for message: %s", mock_message
         )
         notify.assert_called_once_with(
             exc_val, context={"body": mock_message.body, **mock_message.attributes}
@@ -236,7 +236,7 @@ class TestMessageHandler(unittest.TestCase):
         mock_alarm.assert_called_once_with(0)
 
         mock_log.exception.assert_called_once_with(
-            "Failed for message %s", mock_message
+            "Failed for message: %s", mock_message
         )
         notify.assert_called_once_with(
             error, context={"body": mock_message.body, **mock_message.attributes}
@@ -266,7 +266,7 @@ class TestMessageHandler(unittest.TestCase):
         mock_alarm.assert_called_once_with(0)
 
         mock_log.exception.assert_called_once_with(
-            "Failed for message %s", mock_message
+            "Failed for message: %s", mock_message
         )
         notify.assert_called_once_with(
             error, context={"body": mock_message.body, **mock_message.attributes}
@@ -298,7 +298,7 @@ class TestMessageHandler(unittest.TestCase):
         mock_alarm.assert_called_once_with(0)
 
         mock_log.exception.assert_called_once_with(
-            "Failed for message %s", mock_message
+            "Failed for message: %s", mock_message
         )
         notify.assert_called_once_with(
             error, context={"body": mock_message.body, **mock_message.attributes}

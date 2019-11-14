@@ -54,14 +54,36 @@ Usage
 Publish Tasks
 ::
 
-  TODO
+  tm = TaskManager(sqs_url)
+  tm.submit('MyTask', some='kwarg', someother='kwarg')
+  tm.submit('MyOtherTask', **kwargs)
 
+Create a Handler
+::
+
+  class MyHandler(MessageHandler):
+    def __init__(self, message, sqs_timeout, alarm_timeout, hard_timeout=4 * 60 * 60, **kwargs):
+        super().__init__(message, sqs_timeout, alarm_timeout, hard_timeout)
+        self.kwargs = kwargs
+        # prefer parsing arguments (for instance dates) in the consume task and passing explicit arguments
+
+    def running(self):
+        # If you can inspect the task to see if it is hung, do so here
+        return True
+
+    def run(self):
+        # Do some work here!
+
+    def notify(self, exception, context=None):
+        # Implement only for error notification service. Errors are already logged.
+        pass
 
 Consume Tasks
 ::
 
   for task, kwargs, message in TaskManager(sqs_url).task_generator(sqs_timeout=30):
     if task == 'MyTask':
+      # prefer parsing kwargs here and handle KeyError and ValueError appropriately
       with MyHandler(message, sqs_timeout=30, alarm_timeout=25, hard_timeout=300, **kwargs) as handler:
         handler.run()
     elif task == 'MyOtherTask':
@@ -70,6 +92,18 @@ Consume Tasks
     else:
       # Do something about unexpected task request
 
+
+Local Integration Testing
+::
+
+  ...
+  tm = TaskManager(url, queue_constructor=LocalQueue)
+  ...
+
+By passing the queue_constructor argument to the TaskManager, you can bypass AWS SQS and use a local, in memory queue
+object to send and receive messages allowing local synchronous integration testing. This creates one global queue for
+each url. It is not for testing system behavior and does not implement retries, timeouts or other SQS features. It is
+only for integration testing of the interface between your producer and consumer methods.
 
 Development
 ***********
