@@ -5,6 +5,8 @@ import unittest
 from _queue import SimpleQueue
 from unittest.mock import patch, call
 
+from callee import InstanceOf
+
 from sqstaskmaster.local import LocalMessage, LocalQueue
 from sqstaskmaster.message_handler import MessageHandler
 from sqstaskmaster.task_manager import TaskManager
@@ -138,7 +140,7 @@ class TestLocalQueue(unittest.TestCase):
         self.assertListEqual(result, [mock_cls.return_value])
         self.assertGreater(toc - tic, 1.0, "Should wait upto 1 second")
         self.assertLess(
-            toc - tic, 1.05, "Should not take more then 5/100th of second to return"
+            toc - tic, 1.05, "Should not take more than 5/100th of second to return"
         )
 
 
@@ -232,7 +234,8 @@ class TestLocalIntegration(unittest.TestCase):
 
         self.assertListEqual([k for t, k in messages if t == TASK_NAME], received)
 
-    def test_producer_consumer_timeout(self):
+    @patch("sqstaskmaster.message_handler.logger.exception")
+    def test_producer_consumer_timeout(self, mock_logger):
         messages = [(TASK_NAME, {"some": None}), (TASK_STOP, {"more": "nonesense"})]
 
         example_producer("a_particular_queue", messages)
@@ -245,4 +248,9 @@ class TestLocalIntegration(unittest.TestCase):
 
         example_consumer("a_particular_queue", receiver)
 
+        # Since received is appended before the sleep, the kwarg key is present
         self.assertListEqual([k for t, k in messages if t == TASK_NAME], received)
+        # The task will timeout and the handler will log & notify, then proceed to the next message (STOP in this case)
+        mock_logger.assert_called_once_with(
+            "Failed for message: %s", InstanceOf(LocalMessage)
+        )
