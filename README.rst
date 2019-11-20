@@ -94,6 +94,14 @@ Consume Tasks
 
 
 Local Integration Testing
+
+Testing your production system should include a combination of: local stubbing using Mock; tools like
+`localstack <https://github.com/localstack/localstack>`_ or a staging environment to examine behavior in a distributed
+system; and purely local validation of consumer / producer api. LocalQueue is a pure in memory solution that implements
+a minimal subset of the SQS API for this last purpose only. The intent here is not to test or validate behavior of
+consumers and producers interacting with SQS, but only the message content. LocalQueue could be extended to implement
+threading and behave more like sqs within a single process, but that is better done with another tool like local stack.
+
 ::
 
   ...
@@ -102,8 +110,9 @@ Local Integration Testing
 
 By passing the queue_constructor argument to the TaskManager, you can bypass AWS SQS and use a local, in memory queue
 object to send and receive messages allowing local synchronous integration testing. This creates one global queue for
-each url. It is not for testing system behavior and does not implement retries, timeouts or other SQS features. It is
-only for integration testing of the interface between your producer and consumer methods.
+each url. It is not for testing system behavior and does not implement retries, message timeouts or other SQS features.
+It is only for integration testing of the interface between your producer and consumer methods with the TaskManager
+serialization and MessageHandler execution.
 
 Development
 ***********
