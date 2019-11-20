@@ -101,7 +101,7 @@ class MessageHandler(ABC):
                 exc_val,
                 context={"body": self._message.body, **self._message.attributes},
             )
-            logger.exception("Failed for message %s", self._message)
+            logger.exception("Failed for message: %s", self._message)
 
         # catch only Exception not BaseException
         # https://docs.python.org/3/library/exceptions.html#exception-hierarchy
