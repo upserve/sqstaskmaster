@@ -183,4 +183,4 @@ class Provisioner:
 
     def notify(self, exception, context=None):
         if self._notify:
-            self._notify(exception, context=context)
+            self._notify(exception, context=context or {})
