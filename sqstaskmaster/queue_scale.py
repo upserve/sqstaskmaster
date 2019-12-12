@@ -135,7 +135,7 @@ class Provisioner:
         The api specifies the ability to get the tags, but by observation they are not returned even when requested.
         Use get_tags.
         """
-        result = self.ecs.get_description(
+        result = self.ecs.describe_services(
             cluster=rule[self.CLUSTER_NAME],
             services=[rule[self.SERVICE_NAME]],
             include=[

@@ -120,13 +120,13 @@ class TestBatchJobResourceMonitorTask(unittest.TestCase):
         provisioner = queue_scale.Provisioner([self.RULE])
 
         mock_result = Mock()
-        boto3.client.return_value.get_description.return_value = {
+        boto3.client.return_value.describe_services.return_value = {
             "services": [mock_result],
             "failures": [],
         }
 
         self.assertEqual(mock_result, provisioner.get_description(self.RULE))
-        boto3.client.return_value.get_description.assert_called_once_with(
+        boto3.client.return_value.describe_services.assert_called_once_with(
             cluster=self.RULE[provisioner.CLUSTER_NAME],
             services=[self.RULE[provisioner.SERVICE_NAME]],
             include=["TAGS"],
@@ -135,13 +135,13 @@ class TestBatchJobResourceMonitorTask(unittest.TestCase):
     def test_get_description_failure(self, boto3):
         provisioner = queue_scale.Provisioner([self.RULE])
 
-        boto3.client.return_value.get_description.return_value = {
+        boto3.client.return_value.describe_services.return_value = {
             "services": [],
             "failures": [{"arn": "some_arn", "reason": "MISSING"}],
         }
 
         self.assertDictEqual({}, provisioner.get_description(self.RULE))
-        boto3.client.return_value.get_description.assert_called_once_with(
+        boto3.client.return_value.describe_services.assert_called_once_with(
             cluster=self.RULE[provisioner.CLUSTER_NAME],
             services=[self.RULE[provisioner.SERVICE_NAME]],
             include=["TAGS"],
