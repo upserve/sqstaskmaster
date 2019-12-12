@@ -1,8 +1,16 @@
 import logging
 import boto3
+import enum
 from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
+
+
+class ServiceState(enum.Enum):
+    STARTING = enum.auto()
+    ACTIVE = enum.auto()
+    STOPPING = enum.auto()
+    FAILING = enum.auto()
 
 
 class Provisioner:
@@ -84,25 +92,85 @@ class Provisioner:
                 )
 
                 # This could result in thrashing the service count. For tasks that run quickly some historical filter
-                # might be required
-                self.ecs.update_service(
-                    cluster=rule[self.CLUSTER_NAME],
-                    service=rule[self.SERVICE_NAME],
-                    desiredCount=rule[self.ACTIVE_SIZE] if total_messages > 0 else 0,
-                )
+                # might be required but that is not the intended use case.
+                # Beware of attempting to set the count based on the number of messages in the queue. It will be
+                # difficult to control which instances get shutdown and ensure a graceful exit.
+                # All or nothing is simple and only wasteful at the tail end of a large process queue
 
-                logger.info(
-                    "Setting: %s %s to %s count",
-                    rule[self.CLUSTER_NAME],
-                    rule[self.SERVICE_NAME],
-                    rule[self.ACTIVE_SIZE] if total_messages > 0 else 0,
-                )
+                current_state = self.service_state(rule)
+                if current_state == ServiceState.ACTIVE:
+                    self.ecs.update_service(
+                        cluster=rule[self.CLUSTER_NAME],
+                        service=rule[self.SERVICE_NAME],
+                        desiredCount=rule[self.ACTIVE_SIZE]
+                        if total_messages > 0
+                        else 0,
+                    )
+
+                    logger.info(
+                        "Setting: %s %s to %s count",
+                        rule[self.CLUSTER_NAME],
+                        rule[self.SERVICE_NAME],
+                        rule[self.ACTIVE_SIZE] if total_messages > 0 else 0,
+                    )
+                else:
+                    logger.info(
+                        "Service: %s %s is in state: %s; Desired count will not be adjusted",
+                        rule[self.CLUSTER_NAME],
+                        rule[self.SERVICE_NAME],
+                        current_state,
+                    )
 
                 self.log_queue_depth(queue_attributes, rule)
 
             except ClientError as ce:
                 logger.exception("Failed to update resources for rule %s", rule)
                 self.notify(ce, context=rule)
+
+    def get_description(self, rule):
+        """
+        Get the description of the service and its deployments - can be large
+        An unknown resource will result in an empty response.
+
+        The api specifies the ability to get the tags, but by observation they are not returned even when requested.
+        Use get_tags.
+        """
+        result = self.ecs.get_description(
+            cluster=rule[self.CLUSTER_NAME],
+            services=[rule[self.SERVICE_NAME]],
+            include=[
+                "TAGS"
+            ],  # appears to ignore this field - response does not have a tags field
+        )
+
+        if result["failures"]:
+            logger.error("ECS Describe Services Failed: %s", result["failures"])
+            return {}
+        return result["services"][0]
+
+    def get_tags(self, arn):
+        """
+        Get the tags associated with a resource, the describe_services api does not appear to actually return them
+        when requested.
+
+        Throws InvalidParameterException for an bad ARN. Use 'except ClientError:' InvalidParameterException is not
+        importable
+        """
+        return self.ecs.list_tags_for_resource(resourceArn=arn)["tags"]
+
+    def service_state(self, _rule):
+        """
+        :param _rule: the rule to check the service state on
+
+        Override this method to manage service state. Check a tag or other service status to determine whether the
+        provisioner should attempt to modify the desiredCount. This prevents race conditions during service deployment.
+        """
+        logger.warning(
+            "Provisioner using default 'always active' service_state implementation"
+        )
+        # Typically the application would check a TAG on the service description to determine state.
+        # Checking a tag and then setting the count is not atomic and does not guarantee race free operation.
+        return ServiceState.ACTIVE
 
     def log_queue_depth(self, queue_attributes, rule):
         for name, attr in self.QUEUE_DEPTH_ATTRIBUTES.items():
