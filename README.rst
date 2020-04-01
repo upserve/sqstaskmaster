@@ -1,7 +1,7 @@
 SQS Task Master for Python
 ==================================
 
-.. image:: https://travis-ci.org/Automatic/taskhawk-python.svg?branch=master
+.. image:: https://travis-ci.org/Automatic/sqstaskmaster.svg?branch=master
     :target: https://travis-ci.org/upserve/sqstaskmaster
 
 .. image:: https://img.shields.io/pypi/v/sqstaskmaster.svg?style=flat-square
